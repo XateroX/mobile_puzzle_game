@@ -10,10 +10,9 @@ enum GridItemKind {
   C,
 }
 
-class GridItem{
-  GridItemKind kind;
+extension GridItemKindExtensions on GridItemKind {
   Path get shape {
-    switch (kind) {
+    switch (this) {
       case GridItemKind.BLANK:
         return Path();
       case GridItemKind.A:
@@ -40,12 +39,16 @@ class GridItem{
     }
   }
 
-  Color get color => switch(kind){
+  Color get color => switch(this){
     GridItemKind.BLANK => Colors.white,
     GridItemKind.A => Color.fromARGB(255, 255, 180, 180),
     GridItemKind.B => Color.fromARGB(255, 152, 249, 159),
     GridItemKind.C => Color.fromARGB(255, 107, 159, 255)
   };
+} 
+
+class GridItem{
+  GridItemKind kind;
 
   GridItem(this.kind);
 

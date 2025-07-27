@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/data/game_rule.dart';
 import 'package:mobile_puzzle_game/data/game_state.dart';
+import 'package:mobile_puzzle_game/data/grid_item.dart';
 
 class GameCanvas extends CustomPainter {
   GameState gameState;
@@ -27,37 +28,70 @@ class GameCanvas extends CustomPainter {
         double xOffset = canvasActualTopLeft.dx + (squareWidth + padding) * j;
         double yOffset = canvasActualTopLeft.dy + (squareHeight + padding) * i;
         
-        // Paint p = Paint()
-        //   ..style = PaintingStyle.fill;
-        // canvas.drawRect(
-        //   Rect.fromLTWH(
-        //     xOffset, 
-        //     yOffset, 
-        //     squareWidth, 
-        //     squareHeight
-        //   ), 
-        //   p
-        //     ..color = gameState.grid[i][j].color
-        // );
-        double scale = 0.8;
-        double scaledSquareWidth = squareWidth * scale;
-        double scaledSquareHeight = squareHeight * scale;
-        double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * j + (squareWidth - scaledSquareWidth) / 2;
-        double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * i + (squareHeight - scaledSquareHeight) / 2;
-        
-        Paint p = Paint()
-          ..style = PaintingStyle.fill;
-        Path scaledPath = gameState.grid[i][j].shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
-        canvas.save();
-        canvas.translate(scaledXOffset, scaledYOffset);
-        canvas.drawPath(
-          scaledPath,
-          p
-            ..color = gameState.grid[i][j].color
+        _drawGameSquare(
+          canvas,
+          squareWidth,
+          squareHeight,
+          canvasActualTopLeft,
+          padding,
+          j,
+          i,
         );
-        canvas.restore();
       }
     }
+  }
+
+  void _drawGameSquare(
+    Canvas canvas,
+    double squareWidth,
+    double squareHeight,
+    Offset canvasActualTopLeft,
+    double padding,
+    int xIndex,
+    int yIndex,
+  ){
+    double scale = 0.8;
+    double scaledSquareWidth = squareWidth * scale;
+    double scaledSquareHeight = squareHeight * scale;
+    double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex + (squareWidth - scaledSquareWidth) / 2;
+    double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex + (squareHeight - scaledSquareHeight) / 2;
+    
+    Paint p = Paint()
+      ..style = PaintingStyle.fill;
+    Path scaledPath = gameState.grid[yIndex][xIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    canvas.save();
+    canvas.translate(scaledXOffset, scaledYOffset);
+    canvas.drawPath(
+      scaledPath,
+      p
+        ..color = gameState.grid[yIndex][xIndex].kind.color
+    );
+    canvas.restore();
+  }
+
+  void _drawGameSquareWithExactPos(
+    Canvas canvas,
+    GridItemKind item,
+    double squareWidth,
+    double squareHeight,
+    double xPos,
+    double yPos,
+  ){
+    double scale = 0.5;
+    double scaledSquareWidth = squareWidth * scale;
+    double scaledSquareHeight = squareHeight * scale;
+
+    Paint p = Paint()
+      ..style = PaintingStyle.fill;
+    Path scaledPath = item.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    canvas.save();
+    canvas.translate(xPos + squareWidth/4, yPos + squareHeight/4);
+    canvas.drawPath(
+      scaledPath,
+      p
+        ..color = item.color
+    );
+    canvas.restore();
   }
 
   @override
@@ -109,58 +143,46 @@ class GameCanvas extends CustomPainter {
         double yPos = canvasActualTopLeft.dy;
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        canvas.drawRect(
-          Rect.fromLTWH(
-            xPos, 
-            yPos-cellHeight, 
-            cellWidth, 
-            cellHeight
-          ), 
-          Paint()
-            ..color = Colors.blue
-            ..style = PaintingStyle.fill
-        );
-        canvas.drawRect(
-          Rect.fromLTWH(
-            xPos, 
-            yPos-cellHeight + (canvasActualSize.height+cellHeight), 
-            cellWidth, 
-            cellHeight
-          ), 
-          Paint()
-            ..color = Colors.blue
-            ..style = PaintingStyle.fill
-        );
+        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight, cellWidth);
+        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight + (canvasActualSize.height+cellHeight), cellWidth); 
       }
       if (rule.kind == RuleKind.ROW){
         double xPos = canvasActualTopLeft.dx; 
         double yPos = rule.ruleKindIndex*(canvasActualSize.height / gameState.gridDims.item2) + canvasActualTopLeft.dy; 
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        canvas.drawRect(
-          Rect.fromLTWH(
-            xPos-cellWidth, 
-            yPos, 
-            cellWidth, 
-            cellHeight
-          ), 
-          Paint()
-            ..color = Colors.blue
-            ..style = PaintingStyle.fill
-        );
-        canvas.drawRect(
-          Rect.fromLTWH(
-            xPos-cellWidth + (canvasActualSize.width+cellWidth), 
-            yPos, 
-            cellWidth, 
-            cellHeight
-          ), 
-          Paint()
-            ..color = Colors.blue
-            ..style = PaintingStyle.fill
-        );      
+        _drawRulesIcon(canvas, rule, xPos-cellWidth, yPos, cellWidth);
+        _drawRulesIcon(canvas, rule, xPos-cellWidth + (canvasActualSize.width+cellWidth), yPos, cellWidth); 
       }
     }
+  }
+
+  void _drawRulesIcon(
+    Canvas canvas,
+    GameRule rule,
+    double xPos,
+    double yPos,
+    double cellSize,
+  ){
+    // canvas.drawRect(
+    //   Rect.fromLTWH(
+    //     xPos, 
+    //     yPos, 
+    //     cellSize, 
+    //     cellSize
+    //   ), 
+    //   Paint()
+    //     ..color = Colors.blue
+    //     ..style = PaintingStyle.stroke
+    // );
+    _drawGameSquareWithExactPos(
+      canvas,
+      rule.effector,
+      cellSize,
+      cellSize,
+      xPos,
+      yPos,
+    );
   }
 
   @override
