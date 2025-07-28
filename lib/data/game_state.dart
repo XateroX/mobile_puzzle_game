@@ -29,6 +29,13 @@ class GameState {
   }
 
   void initRandomRules(){
-    rules = List.generate(gridDims.item1 * gridDims.item2, (index) => GameRule.random());
+    rules = [];
+    for (int colInd = 0; colInd < gridDims.item1; colInd++){
+      rules.add(GameRule.random(gridDims, RuleKind.COLUMN, null, colInd));
+    }
+
+    for (int rowInd = 0; rowInd < gridDims.item2; rowInd++){
+      rules.add(GameRule.random(gridDims, RuleKind.ROW, rowInd, null));
+    }
   }
 }

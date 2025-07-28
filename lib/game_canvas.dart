@@ -60,7 +60,7 @@ class GameCanvas extends CustomPainter {
       ..style = PaintingStyle.fill;
     Path scaledPath = gameState.grid[yIndex][xIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
     canvas.save();
-    canvas.translate(scaledXOffset, scaledYOffset);
+    canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
     canvas.drawPath(
       scaledPath,
       p
@@ -103,6 +103,7 @@ class GameCanvas extends CustomPainter {
     size = Size(size.width*scale, size.height*scale);
 
     double maxHeight = size.width * aspectRatio;
+    double maxWidth = size.height * (1/aspectRatio);
     canvas.drawRect(
       Rect.fromLTWH(
         0, 
@@ -183,6 +184,43 @@ class GameCanvas extends CustomPainter {
       xPos,
       yPos,
     );
+    if (rule.effector!=GridItemKind.BLANK) {
+      _drawGameRuleEffect(
+        canvas,
+        rule.effect,
+        cellSize,
+        cellSize,
+        xPos,
+        yPos,
+      );
+    }
+  }
+
+  void _drawGameRuleEffect(
+    Canvas canvas,
+    EffectKind effect,
+    double squareWidth,
+    double squareHeight,
+    double xPos,
+    double yPos,
+  ){
+    Offset effectCenter = Offset(xPos+squareWidth/2,yPos+squareHeight/2);
+
+    double scale = 0.31;
+    double scaledSquareWidth = squareWidth * scale*(1/100);
+    double scaledSquareHeight = squareHeight * scale*(1/100);
+
+    Paint p = Paint()
+      ..style = PaintingStyle.fill;
+    Path scaledPath = effect.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    canvas.save();
+    canvas.translate(effectCenter.dx-(squareWidth*scale)/2, effectCenter.dy-(squareHeight*scale)/2);
+    canvas.drawPath(
+      scaledPath,
+      p
+        ..color = Colors.black
+    );
+    canvas.restore();
   }
 
   @override
