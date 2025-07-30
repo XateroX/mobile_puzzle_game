@@ -7,9 +7,11 @@ import 'package:mobile_puzzle_game/data/grid_item.dart';
 
 class GameCanvas extends CustomPainter {
   GameState gameState;
+  final List<Rect> squareRects;
   
   GameCanvas({
-    required this.gameState
+    required this.gameState,
+    required this.squareRects,
   });
 
   void _drawGameGrid(
@@ -18,6 +20,7 @@ class GameCanvas extends CustomPainter {
     Offset canvasActualTopLeft,
     Size canvasActualSize,
   ){
+    squareRects.removeWhere((e)=>true);
     // draw a grid of the game board using the gamestate.grid to get the values to use to draw each square
     double padding = canvasActualSize.width/30; // Padding between squares
     double squareWidth = (canvasActualSize.width / gameState.gridDims.item2) - padding;
@@ -25,8 +28,8 @@ class GameCanvas extends CustomPainter {
 
     for (int i = 0; i < gameState.grid.length; i++) {
       for (int j = 0; j < gameState.grid[i].length; j++) {
-        double xOffset = canvasActualTopLeft.dx + (squareWidth + padding) * j;
-        double yOffset = canvasActualTopLeft.dy + (squareHeight + padding) * i;
+        double xOffset = canvasActualTopLeft.dx + (squareWidth + padding) * i;
+        double yOffset = canvasActualTopLeft.dy + (squareHeight + padding) * j;
         
         _drawGameSquare(
           canvas,
@@ -34,8 +37,8 @@ class GameCanvas extends CustomPainter {
           squareHeight,
           canvasActualTopLeft,
           padding,
-          j,
           i,
+          j,
         );
       }
     }
@@ -55,7 +58,7 @@ class GameCanvas extends CustomPainter {
     double scaledSquareHeight = squareHeight * scale;
     double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex + (squareWidth - scaledSquareWidth) / 2;
     double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex + (squareHeight - scaledSquareHeight) / 2;
-    
+
     Paint p = Paint()
       ..style = PaintingStyle.fill;
     Path scaledPath = gameState.grid[yIndex][xIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
@@ -67,6 +70,33 @@ class GameCanvas extends CustomPainter {
         ..color = gameState.grid[yIndex][xIndex].kind.color
     );
     canvas.restore();
+
+    p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..color = Color.fromARGB(255, 235,235,235);
+    canvas.save();
+    canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: Offset(scaledSquareWidth/2, scaledSquareHeight/2), 
+        width: squareWidth, 
+        height: squareHeight,
+      ),
+      p,
+    );
+    canvas.restore();
+
+    squareRects.add(
+      Rect.fromCenter(
+        center: Offset(
+          scaledXOffset + 1.5*squareWidth, 
+          scaledYOffset + 2*squareHeight,
+        ), 
+        width: squareWidth, 
+        height: squareHeight
+      )
+    );
   }
 
   void _drawGameSquareWithExactPos(
@@ -99,7 +129,10 @@ class GameCanvas extends CustomPainter {
     double aspectRatio = 1;
 
     double scale = 1-1.5*(1/gameState.gridDims.item1);
+    // centralise the grid on the screen
     canvas.translate((size.width-size.width*scale)/2, (size.height-size.height*scale)/2);
+    // move it up to make space for the other buttons
+    // canvas.translate(0,-(size.height-size.height*scale)/4);
     size = Size(size.width*scale, size.height*scale);
 
     double maxHeight = size.width * aspectRatio;
@@ -111,7 +144,7 @@ class GameCanvas extends CustomPainter {
         size.width, 
         maxHeight
       ), 
-      Paint()..color = Color.fromARGB(255, 230, 230, 230)
+      Paint()..color = Color.fromARGB(255, 240, 240, 240)
     );
 
     _drawGameGrid(
@@ -224,7 +257,9 @@ class GameCanvas extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+  bool shouldRepaint(covariant GameCanvas oldDelegate) {
+    bool goingToRepaint = !gameState.equals(oldDelegate.gameState);
+    // print(goingToRepaint);
+    return true;//goingToRepaint;
   }
 }

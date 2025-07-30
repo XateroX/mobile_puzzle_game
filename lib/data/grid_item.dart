@@ -67,7 +67,19 @@ class GridItem{
       ]
     );
   }
-}
 
-class Math {
+  void cycleKind(){
+    kind = switch (kind) {
+      GridItemKind.BLANK => GridItemKind.A,
+      GridItemKind.A => GridItemKind.B,
+      GridItemKind.B => GridItemKind.C,
+      GridItemKind.C => GridItemKind.BLANK,
+    };
+  }
+
+  GridItem copy(){
+    return GridItem(
+      kind
+    );
+  }
 }

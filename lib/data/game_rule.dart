@@ -62,6 +62,21 @@ extension EffectKindExtension on EffectKind {
         return _arrowPlusRight();
     }
   }
+
+  Tuple2<int,int> get vector {
+    switch (this) {
+      case EffectKind.MOVE_UP:
+        return Tuple2( 0,-1);
+      case EffectKind.MOVE_DOWN:
+        return Tuple2( 0, 1);
+      case EffectKind.MOVE_LEFT:
+        return Tuple2(-1, 0);
+      case EffectKind.MOVE_RIGHT:
+        return Tuple2( 1, 0);
+      default:
+        return Tuple2( 0, 0);
+    }
+  }
 }
 
 // Basic arrows:
