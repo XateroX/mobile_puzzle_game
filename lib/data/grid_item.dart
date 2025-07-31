@@ -45,6 +45,13 @@ extension GridItemKindExtensions on GridItemKind {
     GridItemKind.B => Color.fromARGB(255, 152, 249, 159),
     GridItemKind.C => Color.fromARGB(255, 107, 159, 255)
   };
+
+  int get priority => switch(this){
+    GridItemKind.BLANK => 1000,
+    GridItemKind.A => 4,
+    GridItemKind.B => 3,
+    GridItemKind.C => 1
+  };
 } 
 
 class GridItem{
@@ -68,13 +75,24 @@ class GridItem{
     );
   }
 
-  void cycleKind(){
-    kind = switch (kind) {
-      GridItemKind.BLANK => GridItemKind.A,
-      GridItemKind.A => GridItemKind.B,
-      GridItemKind.B => GridItemKind.C,
-      GridItemKind.C => GridItemKind.BLANK,
-    };
+  void cycleKind(
+    {bool cycleUp = true,}
+  ){
+    if (cycleUp){
+      kind = switch (kind) {
+        GridItemKind.BLANK => GridItemKind.A,
+        GridItemKind.A => GridItemKind.B,
+        GridItemKind.B => GridItemKind.C,
+        GridItemKind.C => GridItemKind.BLANK,
+      };
+    } else {
+      kind = switch (kind) {
+        GridItemKind.BLANK => GridItemKind.C,
+        GridItemKind.A => GridItemKind.BLANK,
+        GridItemKind.B => GridItemKind.A,
+        GridItemKind.C => GridItemKind.B,
+      };
+    }
   }
 
   GridItem copy(){

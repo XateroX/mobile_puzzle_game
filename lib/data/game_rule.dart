@@ -7,6 +7,8 @@ import 'package:mobile_puzzle_game/data/grid_item.dart';
 import 'package:mobile_puzzle_game/utils.dart';
 import 'package:tuple/tuple.dart';
 
+import 'package:arrow_path/arrow_path.dart';
+
 enum RuleKind{
   BLANK,
   COLUMN,
@@ -18,10 +20,8 @@ enum EffectKind {
   MOVE_DOWN,
   MOVE_LEFT,
   MOVE_RIGHT,
-  SWAP_UP,
-  SWAP_DOWN,
-  SWAP_LEFT,
-  SWAP_RIGHT,
+  CYCLE_UP,
+  CYCLE_DOWN,
   DUPLICATE_UP,
   DUPLICATE_DOWN,
   DUPLICATE_LEFT,
@@ -42,14 +42,10 @@ extension EffectKindExtension on EffectKind {
         return _arrowRight();
 
       // --- SWAP (double arrows) ---
-      case EffectKind.SWAP_UP:
-        return _doubleArrowVertical();
-      case EffectKind.SWAP_DOWN:
-        return _doubleArrowVertical();
-      case EffectKind.SWAP_LEFT:
-        return _doubleArrowHorizontal();
-      case EffectKind.SWAP_RIGHT:
-        return _doubleArrowHorizontal();
+      case EffectKind.CYCLE_UP:
+        return _cycleUp();
+      case EffectKind.CYCLE_DOWN:
+        return _cycleDown();
 
       // --- DUPLICATE (arrow + plus) ---
       case EffectKind.DUPLICATE_UP:
@@ -72,6 +68,14 @@ extension EffectKindExtension on EffectKind {
       case EffectKind.MOVE_LEFT:
         return Tuple2(-1, 0);
       case EffectKind.MOVE_RIGHT:
+        return Tuple2( 1, 0);
+      case EffectKind.DUPLICATE_UP:
+        return Tuple2( 0,-1);
+      case EffectKind.DUPLICATE_DOWN:
+        return Tuple2( 0, 1);
+      case EffectKind.DUPLICATE_LEFT:
+        return Tuple2(-1, 0);
+      case EffectKind.DUPLICATE_RIGHT:
         return Tuple2( 1, 0);
       default:
         return Tuple2( 0, 0);
@@ -135,11 +139,30 @@ Path _doubleArrowHorizontal() {
   return p;
 }
 
+// Paths for Cycling
+
+Path _cycleUp() {
+  final Path p = _plus();
+  return p;
+}
+
+Path _cycleDown() {
+  final Path p = _minus();
+  return p;
+}
+
+
 // Duplicate: arrow + plus sign
 
 Path _plus() {
   final p = Path();
   p.addRect(Rect.fromLTWH(45, 25, 10, 50)); // vertical bar
+  p.addRect(Rect.fromLTWH(25, 45, 50, 10)); // horizontal bar
+  return p;
+}
+
+Path _minus() {
+  final p = Path();
   p.addRect(Rect.fromLTWH(25, 45, 50, 10)); // horizontal bar
   return p;
 }
@@ -223,6 +246,15 @@ class GameRule{
       (rowInd!=null || colInd!=null) 
         ? (ruleKind==RuleKind.ROW ? rowInd! : colInd!)
         : (ruleKind==RuleKind.ROW ? random.nextInt(gridDims.item2) : random.nextInt(gridDims.item1)),
+    );
+  }
+
+  GameRule copy(){
+    return GameRule(
+      kind,
+      effector,
+      effect,
+      ruleKindIndex,
     );
   }
 }

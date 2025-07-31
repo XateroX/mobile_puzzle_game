@@ -8,38 +8,51 @@ import 'package:tuple/tuple.dart';
 class GameState {
   List<GameRule> rules;
   List<List<GridItem>> grid;
+
+  List<GameRule> currentLevelRules = [];
+  List<List<GridItem>> currentLevelGrid = [];
+
   Tuple2<int,int> gridDims = Tuple2(5,5);
 
   GameState({
     this.rules = const [],
     this.grid = const [],
   }){
-    initBlankBoard();
-    initRandomRules();
+    // grid = getBlankBoard();
+    // rules = getRandomRules();
+    generateLevel();
   }
 
+  void generateLevel(){
+    currentLevelGrid = getRandomBoard();
+    currentLevelRules = getRandomRules();
+    restartLevel();
+  }
 
-  void initBlankBoard(){
-    grid = List.generate(gridDims.item1, (index) => List.generate(gridDims.item2, (index) => GridItem.blank()));
+  List<List<GridItem>> getBlankBoard(){
+    return List.generate(gridDims.item1, (index) => List.generate(gridDims.item2, (index) => GridItem.blank()));
   }
 
   void initBlankRules(){
     rules = [];
   }
 
-  void initRandomBoard(){
-    grid = List.generate(gridDims.item1, (index) => List.generate(gridDims.item2, (index) => GridItem.random()));
+  List<List<GridItem>> getRandomBoard(){
+    List<List<GridItem>> newGrid = List.generate(gridDims.item1, (index) => List.generate(gridDims.item2, (index) => GridItem.random()));
+    return newGrid;
   }
 
-  void initRandomRules(){
-    rules = [];
+  List<GameRule> getRandomRules(){
+    List<GameRule> newRules = [];
     for (int colInd = 0; colInd < gridDims.item1; colInd++){
-      rules.add(GameRule.random(gridDims, RuleKind.COLUMN, null, colInd));
+      newRules.add(GameRule.random(gridDims, RuleKind.COLUMN, null, colInd));
     }
 
     for (int rowInd = 0; rowInd < gridDims.item2; rowInd++){
-      rules.add(GameRule.random(gridDims, RuleKind.ROW, rowInd, null));
+      newRules.add(GameRule.random(gridDims, RuleKind.ROW, rowInd, null));
     }
+
+    return newRules;
   }
 
   bool equals(GameState other) {
@@ -67,24 +80,104 @@ class GameState {
     return true;
   }
 
+  void restartLevel(){
+    grid = [];
+    for (List<GridItem> itemCol in currentLevelGrid){
+      grid.add([]);
+      for (GridItem item in itemCol){
+        grid.last.add(item.copy());
+      }
+    }
+    rules = [];
+    for (GameRule rule in currentLevelRules){
+      rules.add(rule);
+    }
+  }
+
   void tickGame(){
     print("TICK");
+    List<List<GridItem>> nextOverallgameGrid = getBlankBoard();
 
-    List<List<GridItem>> gridNext = [];
-    for (var itemRow in grid) {
-      gridNext.add([]);
-      for (var item in itemRow) {
-        gridNext.last.add(item.copy());
+    List<List<List<GridItem>>> gridNextList = [];
+    for (var itemCol in grid) {
+      for (var item in itemCol) {
+        List<List<GridItem>> blankBoard = getBlankBoard();
+        gridNextList.add(blankBoard);
       }
     }
 
-    for (GameRule rule in rules) {
-      if (rule.effector != GridItemKind.BLANK){
-        gridNext = _applyGameRule(rule, gridNext);
+    for (var itemCol in grid) {
+      for (var item in itemCol) {
+        if (item.kind!=GridItemKind.BLANK){
+          int x = grid.indexOf(itemCol);
+          int y = itemCol.indexOf(item);
+          List<List<GridItem>> newGrid = _applyAllRulesForSquare(x,y, grid);
+          gridNextList[gridDims.item1*x+y] = newGrid;
+        }
       }
     }
 
-    grid = gridNext;
+    for (int x = 0; x < gridDims.item1; x++){
+      for (int y = 0; y < gridDims.item2; y++){
+        List<GridItem> nextInThisPosition = [];
+        for (List<List<GridItem>> nextGrid in gridNextList){
+          GridItem nextGridPositionOption = nextGrid[x][y].copy();
+          if (nextGridPositionOption.kind!=GridItemKind.BLANK){
+            nextInThisPosition.add(nextGridPositionOption);
+          }
+        }
+        if (nextInThisPosition.length==1){
+          nextOverallgameGrid[x][y] = nextInThisPosition.first.copy();
+        } else if(nextInThisPosition.length > 1) {
+          int highestPriority = nextInThisPosition.map(
+            (item)=>item.kind.priority
+          ).toList().reduce((a,b)=>max(a,b));
+          nextOverallgameGrid[x][y] = switch (highestPriority) {
+            1 => GridItem(GridItemKind.C),
+            3 => GridItem(GridItemKind.B),
+            4 => GridItem(GridItemKind.A),
+            _ => GridItem(GridItemKind.BLANK),
+          };
+        }
+      }
+    }
+    print("");
+    grid = nextOverallgameGrid;
+  }
+
+  List<List<GridItem>> _applyAllRulesForSquare(
+    int x, 
+    int y,
+    List<List<GridItem>> gridToApplyTo,
+  ){
+    List<List<GridItem>> newGrid = getBlankBoard();
+    // for (var itemCol in gridToApplyTo) {
+    //   newGrid.add([]);
+    //   for (var item in itemCol) {
+    //     newGrid.last.add(item.copy());
+    //   }
+    // }
+    newGrid[x][y] = gridToApplyTo[x][y].copy();
+    
+    for (GameRule rule in rules){
+      if (
+        (
+          (rule.kind==RuleKind.COLUMN && rule.ruleKindIndex==x) ||
+          (rule.kind==RuleKind.ROW && rule.ruleKindIndex==y) 
+        ) && 
+        (
+          rule.effector!=GridItemKind.BLANK &&
+          rule.kind!=RuleKind.BLANK
+        )
+      ){
+        if (rule.effector==gridToApplyTo[x][y].kind){
+          newGrid = _applyGameRule(rule, newGrid);
+          print("");
+        }
+      }
+    }
+
+    return newGrid;
   }
 
   List<List<GridItem>> _applyGameRule(
@@ -100,22 +193,18 @@ class GameState {
         gridToApplyTo = _applyMove(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
       case EffectKind.MOVE_RIGHT:
         gridToApplyTo = _applyMove(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
-      case EffectKind.SWAP_UP:
-        break;
-      case EffectKind.SWAP_DOWN:
-        break;
-      case EffectKind.SWAP_LEFT:
-        break;
-      case EffectKind.SWAP_RIGHT:
-        break;
+      case EffectKind.CYCLE_UP:
+        gridToApplyTo = _applyCycle(rule.kind,rule.ruleKindIndex,rule.effector,true,gridToApplyTo);
+      case EffectKind.CYCLE_DOWN:
+        gridToApplyTo = _applyCycle(rule.kind,rule.ruleKindIndex,rule.effector,false,gridToApplyTo);
       case EffectKind.DUPLICATE_UP:
-        break;
+        gridToApplyTo = _applyDuplicate(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
       case EffectKind.DUPLICATE_DOWN:
-        break;
+        gridToApplyTo = _applyDuplicate(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
       case EffectKind.DUPLICATE_LEFT:
-        break;
+        gridToApplyTo = _applyDuplicate(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
       case EffectKind.DUPLICATE_RIGHT:
-        break;
+        gridToApplyTo = _applyDuplicate(rule.kind,rule.ruleKindIndex,rule.effector,rule.effect.vector,gridToApplyTo);
       default:
     }
     return gridToApplyTo;
@@ -128,41 +217,138 @@ class GameState {
     Tuple2<int,int> vector,
     List<List<GridItem>> gridToApplyTo,
   ){
-    // NEED TO IMPLEMENT A 2 GRID SYSTEM, ONE FOR READ ONE FOR WRITE //
+    List<List<GridItem>> gridNext = [];
+    for (var itemRow in gridToApplyTo) {
+      gridNext.add([]);
+      for (var item in itemRow) {
+        gridNext.last.add(item.copy());
+      }
+    }
+
     switch (ruleKind) {
-      case RuleKind.COLUMN:
+      case RuleKind.ROW:
         for (int i = 0; i < gridToApplyTo.length; i++){
           if (gridToApplyTo[i][index].kind == itemKind){
-            gridToApplyTo
+            gridNext
             [
-              (i+vector.item2)%gridToApplyTo.length
+              (i+vector.item1)%gridToApplyTo.length
             ]
             [
-              (index+vector.item1)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
-            ].kind = gridToApplyTo[i][index].kind;
+              (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
+            ] = gridToApplyTo[i][index].copy();
 
-            gridToApplyTo[i][index].kind = GridItemKind.BLANK;
+            gridNext[i][index] = GridItem.blank();
           }
         }
         break;
-      case RuleKind.ROW:
+      case RuleKind.COLUMN:
         for (int i = 0; i < gridToApplyTo[index].length; i++){
           if (gridToApplyTo[index][i].kind == itemKind){
-            gridToApplyTo
+            gridNext
             [
-              (index+vector.item2)%gridToApplyTo.length
+              (index+vector.item1)%gridToApplyTo.length
             ]
             [
-              (i+vector.item1)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
-            ].kind = gridToApplyTo[index][i].kind;
+              (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
+            ] = gridToApplyTo[index][i].copy();
 
-            gridToApplyTo[index][i].kind = GridItemKind.BLANK;
+            gridNext[index][i] = GridItem.blank();
           }
         }
         break;
       default:
     }
 
-    return gridToApplyTo;
+    return gridNext;
+  }
+
+
+  List<List<GridItem>> _applyDuplicate(
+    RuleKind ruleKind,
+    int index,
+    GridItemKind itemKind,
+    Tuple2<int,int> vector,
+    List<List<GridItem>> gridToApplyTo,
+  ){
+    List<List<GridItem>> gridNext = [];
+    for (var itemRow in gridToApplyTo) {
+      gridNext.add([]);
+      for (var item in itemRow) {
+        gridNext.last.add(item.copy());
+      }
+    }
+
+    switch (ruleKind) {
+      case RuleKind.ROW:
+        for (int i = 0; i < gridToApplyTo.length; i++){
+          if (gridToApplyTo[i][index].kind == itemKind){
+            gridNext
+            [
+              (i+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
+            ] = gridToApplyTo[i][index].copy();
+          }
+        }
+        break;
+      case RuleKind.COLUMN:
+        for (int i = 0; i < gridToApplyTo[index].length; i++){
+          if (gridToApplyTo[index][i].kind == itemKind){
+            gridNext
+            [
+              (index+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
+            ] = gridToApplyTo[index][i].copy();
+          }
+        }
+        break;
+      default:
+    }
+
+    return gridNext;
+  }
+
+
+  List<List<GridItem>> _applyCycle(
+    RuleKind ruleKind,
+    int index,
+    GridItemKind itemKind,
+    bool cycleUp,
+    List<List<GridItem>> gridToApplyTo,
+  ){
+    List<List<GridItem>> gridNext = [];
+    for (var itemRow in gridToApplyTo) {
+      gridNext.add([]);
+      for (var item in itemRow) {
+        gridNext.last.add(item.copy());
+      }
+    }
+
+    switch (ruleKind) {
+      case RuleKind.ROW:
+        for (int i = 0; i < gridToApplyTo.length; i++){
+          if (gridToApplyTo[i][index].kind == itemKind){
+            gridNext[i][index] = gridToApplyTo[i][index].copy();
+            gridNext[i][index].cycleKind(cycleUp:cycleUp);
+          }
+        }
+        break;
+      case RuleKind.COLUMN:
+        for (int i = 0; i < gridToApplyTo[index].length; i++){
+          if (gridToApplyTo[index][i].kind == itemKind){
+            if (gridToApplyTo[index][i].kind == itemKind){
+              gridNext[index][i] = gridToApplyTo[index][i].copy();
+              gridNext[index][i].cycleKind(cycleUp:cycleUp);
+            }
+          }
+        }
+        break;
+      default:
+    }
+
+    return gridNext;
   }
 }

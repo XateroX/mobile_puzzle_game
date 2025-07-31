@@ -8,10 +8,20 @@ import 'package:mobile_puzzle_game/data/grid_item.dart';
 class GameCanvas extends CustomPainter {
   GameState gameState;
   final List<Rect> squareRects;
+  final List<Rect> ruleRects;
+  final int? pressedRule;
+  final Offset? pressedRulePosition;
+  Offset? lastPositionOfPointer;
+  bool gamePaused;
   
   GameCanvas({
     required this.gameState,
     required this.squareRects,
+    required this.ruleRects,
+    required this.pressedRule,
+    required this.pressedRulePosition,
+    required this.lastPositionOfPointer,
+    required this.gamePaused,
   });
 
   void _drawGameGrid(
@@ -19,6 +29,7 @@ class GameCanvas extends CustomPainter {
     Size size,
     Offset canvasActualTopLeft,
     Size canvasActualSize,
+    Offset overallTranslation,
   ){
     squareRects.removeWhere((e)=>true);
     // draw a grid of the game board using the gamestate.grid to get the values to use to draw each square
@@ -39,6 +50,7 @@ class GameCanvas extends CustomPainter {
           padding,
           i,
           j,
+          overallTranslation,
         );
       }
     }
@@ -52,6 +64,7 @@ class GameCanvas extends CustomPainter {
     double padding,
     int xIndex,
     int yIndex,
+    Offset overallTranslation,
   ){
     double scale = 0.8;
     double scaledSquareWidth = squareWidth * scale;
@@ -61,13 +74,13 @@ class GameCanvas extends CustomPainter {
 
     Paint p = Paint()
       ..style = PaintingStyle.fill;
-    Path scaledPath = gameState.grid[yIndex][xIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    Path scaledPath = gameState.grid[xIndex][yIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
     canvas.save();
     canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
     canvas.drawPath(
       scaledPath,
       p
-        ..color = gameState.grid[yIndex][xIndex].kind.color
+        ..color = gameState.grid[xIndex][yIndex].kind.color
     );
     canvas.restore();
 
@@ -90,8 +103,8 @@ class GameCanvas extends CustomPainter {
     squareRects.add(
       Rect.fromCenter(
         center: Offset(
-          scaledXOffset + 1.5*squareWidth, 
-          scaledYOffset + 2*squareHeight,
+          overallTranslation.dx + scaledXOffset + squareWidth/2, 
+          overallTranslation.dy + scaledYOffset + squareHeight/2,
         ), 
         width: squareWidth, 
         height: squareHeight
@@ -128,9 +141,14 @@ class GameCanvas extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     double aspectRatio = 1;
 
+    Offset overallTranslation = Offset.zero;
+
     double scale = 1-1.5*(1/gameState.gridDims.item1);
+    
     // centralise the grid on the screen
+    canvas.save();
     canvas.translate((size.width-size.width*scale)/2, (size.height-size.height*scale)/2);
+    overallTranslation += Offset((size.width-size.width*scale)/2, (size.height-size.height*scale)/2);
     // move it up to make space for the other buttons
     // canvas.translate(0,-(size.height-size.height*scale)/4);
     size = Size(size.width*scale, size.height*scale);
@@ -147,11 +165,14 @@ class GameCanvas extends CustomPainter {
       Paint()..color = Color.fromARGB(255, 240, 240, 240)
     );
 
+    _drawGameOverallUI(canvas, Offset(0, (size.height - maxHeight)/2), Size(size.width, maxHeight));
+
     _drawGameGrid(
       canvas, 
       size,
       Offset(0, (size.height - maxHeight)/2),
-      Size(size.width, maxHeight)
+      Size(size.width, maxHeight),
+      overallTranslation
     );
 
     _drawGameRules(
@@ -159,9 +180,14 @@ class GameCanvas extends CustomPainter {
       size,
       Offset(0, (size.height - maxHeight)/2),
       Size(size.width, maxHeight),
+      overallTranslation,
     );
 
     canvas.translate(-(size.width-size.width*scale)/2, -(size.height-size.height*scale)/2);
+
+    canvas.restore();
+    // _drawAllRectHitboxes(canvas);
+    // _drawPointer(canvas);
   }
 
   void _drawGameRules(
@@ -169,7 +195,9 @@ class GameCanvas extends CustomPainter {
     Size size,
     Offset canvasActualTopLeft,
     Size canvasActualSize,
+    Offset overallTranslation,
   ){
+    ruleRects.removeWhere((e)=>true);
     for (int i = 0; i < gameState.rules.length; i++) {
       GameRule rule = gameState.rules[i];
       if (rule.kind == RuleKind.COLUMN){
@@ -177,16 +205,16 @@ class GameCanvas extends CustomPainter {
         double yPos = canvasActualTopLeft.dy;
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight, cellWidth);
-        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight + (canvasActualSize.height+cellHeight), cellWidth); 
+        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight, cellWidth, overallTranslation);
+        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight + (canvasActualSize.height+cellHeight), cellWidth, overallTranslation, provideBoundRect:false); 
       }
       if (rule.kind == RuleKind.ROW){
         double xPos = canvasActualTopLeft.dx; 
         double yPos = rule.ruleKindIndex*(canvasActualSize.height / gameState.gridDims.item2) + canvasActualTopLeft.dy; 
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        _drawRulesIcon(canvas, rule, xPos-cellWidth, yPos, cellWidth);
-        _drawRulesIcon(canvas, rule, xPos-cellWidth + (canvasActualSize.width+cellWidth), yPos, cellWidth); 
+        _drawRulesIcon(canvas, rule, xPos-cellWidth, yPos, cellWidth, overallTranslation);
+        _drawRulesIcon(canvas, rule, xPos-cellWidth + (canvasActualSize.width+cellWidth), yPos, cellWidth, overallTranslation, provideBoundRect:false); 
       }
     }
   }
@@ -197,7 +225,13 @@ class GameCanvas extends CustomPainter {
     double xPos,
     double yPos,
     double cellSize,
+    Offset overallTranslation,
+    {bool provideBoundRect=true,}
   ){
+    if (gameState.rules.indexOf(rule) == pressedRule){
+      xPos = xPos + (pressedRulePosition?.dx ?? 0);
+      yPos = yPos + (pressedRulePosition?.dy ?? 0);
+    }
     // canvas.drawRect(
     //   Rect.fromLTWH(
     //     xPos, 
@@ -217,25 +251,29 @@ class GameCanvas extends CustomPainter {
       xPos,
       yPos,
     );
-    if (rule.effector!=GridItemKind.BLANK) {
-      _drawGameRuleEffect(
-        canvas,
-        rule.effect,
-        cellSize,
-        cellSize,
-        xPos,
-        yPos,
-      );
-    }
+    _drawGameRuleEffect(
+      canvas,
+      rule.effect,
+      rule.effector,
+      cellSize,
+      cellSize,
+      xPos,
+      yPos,
+      overallTranslation,
+      provideBoundRect:provideBoundRect,
+    );
   }
 
   void _drawGameRuleEffect(
     Canvas canvas,
     EffectKind effect,
+    GridItemKind effector,
     double squareWidth,
     double squareHeight,
     double xPos,
     double yPos,
+    Offset overallTranslation,
+    {bool provideBoundRect=true,}
   ){
     Offset effectCenter = Offset(xPos+squareWidth/2,yPos+squareHeight/2);
 
@@ -248,12 +286,66 @@ class GameCanvas extends CustomPainter {
     Path scaledPath = effect.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
     canvas.save();
     canvas.translate(effectCenter.dx-(squareWidth*scale)/2, effectCenter.dy-(squareHeight*scale)/2);
-    canvas.drawPath(
-      scaledPath,
-      p
-        ..color = Colors.black
-    );
+
+    if (effector!=GridItemKind.BLANK){
+      canvas.drawPath(
+        scaledPath,
+        p
+          ..color = Colors.black
+      );
+    }
+
     canvas.restore();
+    if (provideBoundRect){
+      ruleRects.add(
+        Rect.fromCenter(
+          center: Offset(
+            overallTranslation.dx + effectCenter.dx, 
+            overallTranslation.dy + effectCenter.dy,
+          ), 
+          width: squareWidth, 
+          height: squareHeight
+        )
+      );
+    }
+  }
+
+  void _drawAllRectHitboxes(Canvas canvas){
+    for (Rect rect in squareRects){
+      canvas.drawRect(rect, Paint()..color=Colors.green..style=PaintingStyle.stroke);
+    }
+    for (Rect rect in ruleRects){
+      canvas.drawRect(rect, Paint()..color=Colors.red..style=PaintingStyle.stroke);
+    }
+  }
+
+  void _drawPointer(Canvas canvas){
+    canvas.drawCircle(lastPositionOfPointer??Offset(0,0), 10, Paint()..color=Colors.purple);
+  }
+
+  void _drawGameOverallUI(
+    Canvas canvas, 
+    Offset canvasActualTopLeft,
+    Size size
+  ){
+    if (gamePaused){
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: canvasActualTopLeft + Offset(size.width/3, size.height/2), 
+          width: size.width/4, 
+          height: size.height*0.8
+        ),
+        Paint()..color=Colors.black.withAlpha(30)
+      );
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: canvasActualTopLeft + Offset(2*size.width/3, size.height/2), 
+          width: size.width/4, 
+          height: size.height*0.8
+        ),
+        Paint()..color=Colors.black.withAlpha(30)
+      );
+    }
   }
 
   @override
