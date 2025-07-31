@@ -52,6 +52,18 @@ class GameCanvas extends CustomPainter {
           j,
           overallTranslation,
         );
+
+        _drawGameSquare(
+          canvas,
+          squareWidth,
+          squareHeight,
+          canvasActualTopLeft,
+          padding,
+          i,
+          j,
+          overallTranslation,
+          solution: true,
+        );
       }
     }
   }
@@ -65,22 +77,25 @@ class GameCanvas extends CustomPainter {
     int xIndex,
     int yIndex,
     Offset overallTranslation,
+    {bool solution=false,}
   ){
-    double scale = 0.8;
+    List<List<GridItem>> gridToPullFrom = solution ? gameState.solutionGrid : gameState.grid;
+
+    double scale = solution ? 0.25 : 0.8;
     double scaledSquareWidth = squareWidth * scale;
     double scaledSquareHeight = squareHeight * scale;
-    double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex + (squareWidth - scaledSquareWidth) / 2;
-    double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex + (squareHeight - scaledSquareHeight) / 2;
+    double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex;
+    double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex;
 
     Paint p = Paint()
       ..style = PaintingStyle.fill;
-    Path scaledPath = gameState.grid[xIndex][yIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    Path scaledPath = gridToPullFrom[xIndex][yIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
     canvas.save();
     canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
     canvas.drawPath(
       scaledPath,
       p
-        ..color = gameState.grid[xIndex][yIndex].kind.color
+        ..color = gridToPullFrom[xIndex][yIndex].kind.color.withAlpha(solution ? 150 : 255)
     );
     canvas.restore();
 
@@ -89,10 +104,10 @@ class GameCanvas extends CustomPainter {
       ..strokeWidth = 3
       ..color = Color.fromARGB(255, 235,235,235);
     canvas.save();
-    canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
+    canvas.translate(scaledXOffset , scaledYOffset );
     canvas.drawRect(
       Rect.fromCenter(
-        center: Offset(scaledSquareWidth/2, scaledSquareHeight/2), 
+        center: Offset(squareWidth/2, squareHeight/2), 
         width: squareWidth, 
         height: squareHeight,
       ),
@@ -100,16 +115,18 @@ class GameCanvas extends CustomPainter {
     );
     canvas.restore();
 
-    squareRects.add(
-      Rect.fromCenter(
-        center: Offset(
-          overallTranslation.dx + scaledXOffset + squareWidth/2, 
-          overallTranslation.dy + scaledYOffset + squareHeight/2,
-        ), 
-        width: squareWidth, 
-        height: squareHeight
-      )
-    );
+    if (!solution){
+      squareRects.add(
+        Rect.fromCenter(
+          center: Offset(
+            overallTranslation.dx + scaledXOffset + squareWidth/2, 
+            overallTranslation.dy + scaledYOffset + squareHeight/2,
+          ), 
+          width: squareWidth, 
+          height: squareHeight
+        )
+      );
+    }
   }
 
   void _drawGameSquareWithExactPos(

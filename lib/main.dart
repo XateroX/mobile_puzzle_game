@@ -74,6 +74,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       (Timer timer) {gameState.tickGame();},
     );
     gamePaused = false;
+    gameState.currentLevelGrid = gameState.gridCopy(gameState.grid);
   }
 
   void pauseTicks(){

@@ -11,8 +11,11 @@ class GameState {
 
   List<GameRule> currentLevelRules = [];
   List<List<GridItem>> currentLevelGrid = [];
+  List<List<GridItem>> solutionGrid = [];
 
   Tuple2<int,int> gridDims = Tuple2(5,5);
+
+  int gameTickSolutionAmount = 30;
 
   GameState({
     this.rules = const [],
@@ -23,10 +26,45 @@ class GameState {
     generateLevel();
   }
 
+  List<List<GridItem>> gridCopy(List<List<GridItem>> existingGrid){
+    List<List<GridItem>> newGrid = [];
+    for (List<GridItem> itemCol in existingGrid){
+      newGrid.add([]);
+      for (GridItem item in itemCol){
+        newGrid.last.add(item.copy());
+      }
+    }
+    return newGrid;
+  }
+
   void generateLevel(){
     currentLevelGrid = getRandomBoard();
     currentLevelRules = getRandomRules();
     restartLevel();
+
+    for (int i = 0; i < gameTickSolutionAmount; i++){
+      tickGame();
+    }
+
+    solutionGrid = gridCopy(grid);
+    restartLevel();
+    for (int i = 0; i < 100; i++){
+      int rule1Ind = Random().nextInt(rules.length);
+      int rule2Ind = Random().nextInt(rules.length);
+
+      GameRule rule1 = rules[rule1Ind].copy();
+      GameRule rule2 = rules[rule2Ind].copy();
+
+      rules[rule1Ind].ruleKindIndex = rule2.ruleKindIndex;
+      rules[rule1Ind].kind = rule2.kind;
+
+      rules[rule2Ind].ruleKindIndex = rule1.ruleKindIndex;
+      rules[rule2Ind].kind = rule1.kind;
+    }
+    grid = getBlankBoard();
+    currentLevelGrid = getBlankBoard();
+    currentLevelRules = [];
+    currentLevelRules.addAll(rules.map((rule)=>rule.copy()));
   }
 
   List<List<GridItem>> getBlankBoard(){
@@ -90,7 +128,7 @@ class GameState {
     }
     rules = [];
     for (GameRule rule in currentLevelRules){
-      rules.add(rule);
+      rules.add(rule.copy());
     }
   }
 
