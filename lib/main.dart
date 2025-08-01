@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/data/game_rule.dart';
 import 'package:mobile_puzzle_game/data/game_state.dart';
+import 'package:mobile_puzzle_game/data/grid_item.dart';
 import 'package:mobile_puzzle_game/game_canvas.dart';
 
 void main() {
@@ -43,6 +44,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Offset? pressedRulePosition;
   Offset? pressedRuleOrigin;
 
+  bool _canSave = true;
   bool _shouldStart = false;
   bool _shouldPause = false;
   bool _shouldRestartPlay = false;
@@ -74,12 +76,18 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       (Timer timer) {gameState.tickGame();},
     );
     gamePaused = false;
-    gameState.currentLevelGrid = gameState.gridCopy(gameState.grid);
+    if (_canSave){
+      gameState.currentLevelGrid = gameState.gridCopy(gameState.grid);
+      gameState.currentLevelRules = gameState.rules.map((rule)=>rule.copy()).toList();
+      _canSave = false;
+    }
   }
 
   void pauseTicks(){
     timer?.cancel();
     gamePaused = true;
+
+    gameState.checkForSolution();
   }
 
   @override
@@ -136,21 +144,29 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               },
               child: GestureDetector(
                 onTap: (){
-                  if (selectedSquare!=null){
+                  if (
+                    selectedSquare!=null &&
+                    gamePaused == true && 
+                    _canSave == true
+                  ){
                     int colInd = (selectedSquare! % gameState.gridDims.item1);
                     int rowInd = (selectedSquare! ~/ gameState.gridDims.item1);
-                    gameState.grid[rowInd][colInd].cycleKind();
-                    setState(() {});
+                    if (gameState.initialGrid[rowInd][colInd].kind!=GridItemKind.BLANK){
+                      gameState.grid[rowInd][colInd].cycleKind();
+                      setState(() {});
+                    }
                   }
                 },
                 onLongPressStart: (details) {
-                  lastPositionOfPointer = details.localPosition;
-                  int? pressingRule = hitTestRules(details.localPosition);
-                  if (pressingRule!=null){
-                    pressedRule = pressingRule;
-                    pressedRuleOrigin = details.localPosition;
+                  if (gamePaused){
+                    lastPositionOfPointer = details.localPosition;
+                    int? pressingRule = hitTestRules(details.localPosition);
+                    if (pressingRule!=null){
+                      pressedRule = pressingRule;
+                      pressedRuleOrigin = details.localPosition;
+                    }
+                    print("Long: $pressingRule");
                   }
-                  print("Long: $pressingRule");
                 },
                 onLongPressMoveUpdate: (details) {
                   lastPositionOfPointer = details.localPosition;
@@ -194,9 +210,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   }
                 },
                 onHorizontalDragEnd: (DragEndDetails details) {
-                  if (_shouldRestartPlay){
+                  if (_shouldRestartPlay && gamePaused){
                     gameState.restartLevel();
                     _shouldRestartPlay = false;
+                    _canSave = true;
                   } else if (_shouldStart){
                     startTicks();
                     print("start ticks");
@@ -230,6 +247,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     pressedRulePosition: pressedRulePosition,
                     lastPositionOfPointer: lastPositionOfPointer,
                     gamePaused: gamePaused,
+                    canSave: _canSave,
                   ),
                 ),
               ),

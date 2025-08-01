@@ -12,6 +12,7 @@ class GameState {
   List<GameRule> currentLevelRules = [];
   List<List<GridItem>> currentLevelGrid = [];
   List<List<GridItem>> solutionGrid = [];
+  List<List<GridItem>> initialGrid = [];
 
   Tuple2<int,int> gridDims = Tuple2(5,5);
 
@@ -21,8 +22,6 @@ class GameState {
     this.rules = const [],
     this.grid = const [],
   }){
-    // grid = getBlankBoard();
-    // rules = getRandomRules();
     generateLevel();
   }
 
@@ -41,6 +40,7 @@ class GameState {
     currentLevelGrid = getRandomBoard();
     currentLevelRules = getRandomRules();
     restartLevel();
+    initialGrid = gridCopy(currentLevelGrid);
 
     for (int i = 0; i < gameTickSolutionAmount; i++){
       tickGame();
@@ -129,6 +129,20 @@ class GameState {
     rules = [];
     for (GameRule rule in currentLevelRules){
       rules.add(rule.copy());
+    }
+  }
+
+  void checkForSolution(){
+    bool done = true;
+    for (int i = 0; i < gridDims.item1; i++){
+      for (int j = 0; j < gridDims.item2; j++){
+        if (grid[i][j].kind != solutionGrid[i][j].kind){
+          done = false;
+        }
+      }
+    }
+    if (done){
+      generateLevel();
     }
   }
 
