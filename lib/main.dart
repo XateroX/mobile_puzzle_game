@@ -134,6 +134,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 });
               },
               child: GestureDetector(
+                onTapDown: (details) {
+                  setState(() {
+                    selectedSquare = hitTestBar(details.localPosition);
+                    lastPositionOfPointer = details.localPosition;
+                  });
+                },
                 onTap: (){
                   if (selectedSquare!=null){
                     int colInd = (selectedSquare! % gameState.gridDims.item1);
@@ -175,19 +181,19 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   pressedRulePosition = null;
                 },
                 onHorizontalDragUpdate: (DragUpdateDetails details){
-                  if (details.delta.dx>0){
+                  if (details.delta.dx>0 && (details.delta.dx).abs()>(details.delta.dy).abs()){
                     _shouldStart = gamePaused ? true : false;
                     _shouldPause = gamePaused ? false : true;
                     print("should start = true");
-                  } else if (details.delta.dx < 0) {
+                  } else if (details.delta.dx<0  && (details.delta.dx).abs()>(details.delta.dy).abs()) {
                     _shouldRestartPlay = true;
                   }
                 },
                 onVerticalDragUpdate: (DragUpdateDetails details){
-                  if (details.delta.dy<0){
+                  if (details.delta.dy<0 && (details.delta.dy).abs()>(details.delta.dx).abs()){
                     _shouldIncrement = true;
                     _shouldDecrement = false;
-                  } else if (details.delta.dy>0) {
+                  } else if (details.delta.dy>0 && (details.delta.dy).abs()>(details.delta.dx).abs()) {
                     _shouldDecrement = true;
                     _shouldIncrement = false;
                   }
