@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:mobile_puzzle_game/data/grid_item.dart';
+import 'package:mobile_puzzle_game/main.dart';
 import 'package:mobile_puzzle_game/utils.dart';
 import 'package:tuple/tuple.dart';
 
@@ -235,17 +236,17 @@ class GameRule{
     int? rowInd,
     int? colInd,
   ){
-    final random = Random();
-    ruleKind = ruleKind ?? RuleKind.values[random.nextInt(RuleKind.values.length)];
-    GridItemKind gameItemKind = GridItemKind.values[random.nextInt(GridItemKind.values.length)];
-    EffectKind effectKind = EffectKind.values[random.nextInt(EffectKind.values.length)];
+    
+    ruleKind = ruleKind ?? RuleKind.values[RANDOM_GENERATOR.nextInt(RuleKind.values.length)];
+    GridItemKind gameItemKind = GridItemKind.values[RANDOM_GENERATOR.nextInt(GridItemKind.values.length)];
+    EffectKind effectKind = EffectKind.values[RANDOM_GENERATOR.nextInt(EffectKind.values.length)];
     return GameRule(
       ruleKind,
       gameItemKind,
       effectKind,
       (rowInd!=null || colInd!=null) 
         ? (ruleKind==RuleKind.ROW ? rowInd! : colInd!)
-        : (ruleKind==RuleKind.ROW ? random.nextInt(gridDims.item2) : random.nextInt(gridDims.item1)),
+        : (ruleKind==RuleKind.ROW ? RANDOM_GENERATOR.nextInt(gridDims.item2) : RANDOM_GENERATOR.nextInt(gridDims.item1)),
     );
   }
 

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/data/game_rule.dart';
 import 'package:mobile_puzzle_game/data/grid_item.dart';
+import 'package:mobile_puzzle_game/main.dart';
 import 'package:tuple/tuple.dart';
 
 class GameState {
@@ -49,8 +50,8 @@ class GameState {
     solutionGrid = gridCopy(grid);
     restartLevel();
     for (int i = 0; i < 100; i++){
-      int rule1Ind = Random().nextInt(rules.length);
-      int rule2Ind = Random().nextInt(rules.length);
+      int rule1Ind = RANDOM_GENERATOR.nextInt(rules.length);
+      int rule2Ind = RANDOM_GENERATOR.nextInt(rules.length);
 
       GameRule rule1 = rules[rule1Ind].copy();
       GameRule rule2 = rules[rule2Ind].copy();
@@ -142,6 +143,7 @@ class GameState {
       }
     }
     if (done){
+      setNewRandomSeed();
       generateLevel();
     }
   }

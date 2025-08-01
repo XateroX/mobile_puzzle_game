@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:mobile_puzzle_game/main.dart';
 
 enum GridItemKind {
   BLANK,
@@ -67,10 +68,9 @@ class GridItem{
 
 
   static random(){
-    Random random = Random();
     return GridItem(
       GridItemKind.values[
-        random.nextInt(GridItemKind.values.length)
+        RANDOM_GENERATOR.nextInt(GridItemKind.values.length)
       ]
     );
   }

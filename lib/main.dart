@@ -12,6 +12,14 @@ import 'package:mobile_puzzle_game/sound/audio_controller.dart';
 import 'package:mobile_puzzle_game/sound/sound_state.dart';
 import 'package:tuple/tuple.dart';
 
+int RANDOM_SEED = 0;
+Random RANDOM_GENERATOR = Random(RANDOM_SEED);
+
+
+void setNewRandomSeed(){
+  RANDOM_SEED = DateTime.now().millisecondsSinceEpoch % 1000000;
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -20,6 +28,7 @@ void main() async {
   // audioController.startMusic();
 
   SoundState soundState = SoundState(audioController:audioController);
+  setNewRandomSeed();
  
   runApp(
      ChangeNotifierProvider<SoundState>(
@@ -338,6 +347,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         ElevatedButton(
                           onPressed: gameState.gridDims.item1 < 10 ? () {
                             gameState.gridDims = Tuple2(gameState.gridDims.item1+1, gameState.gridDims.item2+1);
+                            setNewRandomSeed();
+                            RANDOM_GENERATOR = Random(RANDOM_SEED);
                             gameState.generateLevel();
                           } : null, 
                           child: Text("+")
@@ -348,15 +359,42 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         ElevatedButton(
                           onPressed: gameState.gridDims.item1 > 2 ? () {
                             gameState.gridDims = Tuple2(gameState.gridDims.item1-1, gameState.gridDims.item2-1);
+                            setNewRandomSeed();
+                            RANDOM_GENERATOR = Random(RANDOM_SEED);
                             gameState.generateLevel();
                           } : null, 
                           child: Text("-")
                         ),
                       ],
                     ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Random Seed:"),
+                        SizedBox(width: 10),
+                        Container(
+                          width: 100,
+                          child: TextField(
+                            onSubmitted: (value) {
+                              int? seed = int.tryParse(value);
+                              if (seed != null) {
+                                RANDOM_SEED = seed;
+                                RANDOM_GENERATOR = Random(RANDOM_SEED);
+                                gameState.generateLevel();
+                              }
+                            },
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              labelText: 'Seed',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ) : Container()
+              ) : Container(),
+              Text(RANDOM_SEED.toString()),
             ]
           ),
         );
