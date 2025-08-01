@@ -99,6 +99,15 @@ class GameCanvas extends CustomPainter {
       p
         ..color = gridToPullFrom[xIndex][yIndex].kind.color.withAlpha(solution ? 175 : 255)
     );
+    if (solution){
+      canvas.drawPath(
+        scaledPath,
+        p
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = squareWidth/50
+          ..color = Colors.black.withAlpha(20)
+      );
+    }
     canvas.restore();
 
     if (gameState.initialGrid[xIndex][yIndex].kind==GridItemKind.BLANK){
