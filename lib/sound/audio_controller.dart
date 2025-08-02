@@ -6,7 +6,7 @@ class AudioController {
 
   SoLoud? _soloud; 
   SoundHandle? _musicHandle; 
-  Map<String, AudioSource> _soundSources = {};
+  final Map<String, AudioSource> _soundSources = {};
 
   Future<void> initialize() async {
     _soloud = SoLoud.instance;

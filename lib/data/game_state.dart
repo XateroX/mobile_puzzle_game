@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/data/game_rule.dart';
 import 'package:mobile_puzzle_game/data/grid_item.dart';
 import 'package:mobile_puzzle_game/main.dart';

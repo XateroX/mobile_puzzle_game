@@ -1,6 +1,5 @@
 // ignore_for_file: constant_identifier_names
 
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:mobile_puzzle_game/data/grid_item.dart';
@@ -8,7 +7,6 @@ import 'package:mobile_puzzle_game/main.dart';
 import 'package:mobile_puzzle_game/utils.dart';
 import 'package:tuple/tuple.dart';
 
-import 'package:arrow_path/arrow_path.dart';
 
 enum RuleKind{
   BLANK,
@@ -238,7 +236,7 @@ class GameRule{
   ){
     
     ruleKind = ruleKind ?? RuleKind.values[RANDOM_GENERATOR.nextInt(RuleKind.values.length)];
-    GridItemKind gameItemKind = GridItemKind.values[RANDOM_GENERATOR.nextInt(GridItemKind.values.length)];
+    GridItemKind gameItemKind = GridItemKind.values[RANDOM_GENERATOR.nextInt(GridItemKind.values.length-1)+1];
     EffectKind effectKind = EffectKind.values[RANDOM_GENERATOR.nextInt(EffectKind.values.length)];
     return GameRule(
       ruleKind,

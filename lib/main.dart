@@ -24,7 +24,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final audioController = AudioController();
-  await audioController.initialize();
+  // await audioController.initialize();
   // audioController.startMusic();
 
   SoundState soundState = SoundState(audioController:audioController);
@@ -147,7 +147,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       if (
         ruleRects[i].contains(position) &&
         !bannedValues.contains(i)
-      ) return i;
+      ) {
+        return i;
+      }
     }
     return null;
   }
@@ -235,14 +237,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       if (
                         pressingRule != null
                       ){
-                        GameRule pressingRuleValue = gameState.rules[pressingRule!].copy();
+                        GameRule pressingRuleValue = gameState.rules[pressingRule].copy();
                         GameRule pressedRuleValue = gameState.rules[pressedRule!].copy();
                         if (pressedRule!=null){
                           gameState.rules[pressedRule!].ruleKindIndex = pressingRuleValue.ruleKindIndex;
                           gameState.rules[pressedRule!].kind = pressingRuleValue.kind;
               
-                          gameState.rules[pressingRule!].ruleKindIndex = pressedRuleValue.ruleKindIndex;
-                          gameState.rules[pressingRule!].kind = pressedRuleValue.kind;
+                          gameState.rules[pressingRule].ruleKindIndex = pressedRuleValue.ruleKindIndex;
+                          gameState.rules[pressingRule].kind = pressedRuleValue.kind;
                         }
                       }
                       pressedRule = null;
@@ -328,7 +330,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           child: Text("+")
                         ),
                         SizedBox(width: 10),
-                        Text("Tick Rate: ${tickRate}"),
+                        Text("Tick Rate: $tickRate"),
                         SizedBox(width: 10),
                         ElevatedButton(
                           onPressed: (){
@@ -372,7 +374,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       children: [
                         Text("Random Seed:"),
                         SizedBox(width: 10),
-                        Container(
+                        SizedBox(
                           width: 100,
                           child: TextField(
                             onSubmitted: (value) {
