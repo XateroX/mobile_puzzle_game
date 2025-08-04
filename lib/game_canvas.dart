@@ -253,22 +253,23 @@ class GameCanvas extends CustomPainter {
         double yPos = canvasActualTopLeft.dy;
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight, cellWidth, overallTranslation, i);
-        _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight + (canvasActualSize.height+cellHeight), cellWidth, overallTranslation, i, provideBoundRect:false,); 
+        _drawRulesIcon(canvas, canvasActualSize, rule, xPos, yPos-cellHeight, cellWidth, overallTranslation, i);
+        // _drawRulesIcon(canvas, rule, xPos, yPos-cellHeight + (canvasActualSize.height+cellHeight), cellWidth, overallTranslation, i, provideBoundRect:false,); 
       }
       if (rule.kind == RuleKind.ROW){
         double xPos = canvasActualTopLeft.dx; 
         double yPos = rule.ruleKindIndex*(canvasActualSize.height / gameState.gridDims.item2) + canvasActualTopLeft.dy; 
         double cellWidth = canvasActualSize.width / gameState.gridDims.item1;
         double cellHeight = canvasActualSize.height / gameState.gridDims.item2;
-        _drawRulesIcon(canvas, rule, xPos-cellWidth, yPos, cellWidth, overallTranslation, i);
-        _drawRulesIcon(canvas, rule, xPos-cellWidth + (canvasActualSize.width+cellWidth), yPos, cellWidth, overallTranslation, i, provideBoundRect:false); 
+        _drawRulesIcon(canvas, canvasActualSize, rule, xPos-cellWidth, yPos, cellWidth, overallTranslation, i);
+        // _drawRulesIcon(canvas, rule, xPos-cellWidth + (canvasActualSize.width+cellWidth), yPos, cellWidth, overallTranslation, i, provideBoundRect:false); 
       }
     }
   }
 
   void _drawRulesIcon(
     Canvas canvas,
+    Size canvasActualSize,
     GameRule rule,
     double xPos,
     double yPos,
@@ -277,6 +278,14 @@ class GameCanvas extends CustomPainter {
     int ruleIndex,
     {bool provideBoundRect=true,}
   ){
+    if (rule.ruleKindOriIndex==1){
+      if (rule.kind==RuleKind.ROW){
+        xPos += (canvasActualSize.width+cellSize);
+      } else if (rule.kind==RuleKind.COLUMN){
+        yPos += (canvasActualSize.height+cellSize);
+      }
+    }
+
     if (gameState.rules.indexOf(rule) == pressedRule){
       xPos = xPos + (pressedRulePosition?.dx ?? 0);
       yPos = yPos + (pressedRulePosition?.dy ?? 0);

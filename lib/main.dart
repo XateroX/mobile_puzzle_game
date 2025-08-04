@@ -242,9 +242,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         if (pressedRule!=null){
                           gameState.rules[pressedRule!].ruleKindIndex = pressingRuleValue.ruleKindIndex;
                           gameState.rules[pressedRule!].kind = pressingRuleValue.kind;
+                          gameState.rules[pressedRule!].ruleKindOriIndex = pressingRuleValue.ruleKindOriIndex;
               
                           gameState.rules[pressingRule].ruleKindIndex = pressedRuleValue.ruleKindIndex;
                           gameState.rules[pressingRule].kind = pressedRuleValue.kind;
+                          gameState.rules[pressingRule].ruleKindOriIndex = pressedRuleValue.ruleKindOriIndex;
                         }
                       }
                       pressedRule = null;

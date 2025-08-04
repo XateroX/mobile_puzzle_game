@@ -220,12 +220,14 @@ class GameRule{
   GridItemKind effector;
   EffectKind effect;
   int ruleKindIndex;
+  int ruleKindOriIndex;
   
   GameRule(
     this.kind,
     this.effector,
     this.effect,
     this.ruleKindIndex,
+    this.ruleKindOriIndex,
   );
 
   static GameRule random(
@@ -233,6 +235,7 @@ class GameRule{
     RuleKind? ruleKind,
     int? rowInd,
     int? colInd,
+    int oriIndex,
   ){
     
     ruleKind = ruleKind ?? RuleKind.values[RANDOM_GENERATOR.nextInt(RuleKind.values.length)];
@@ -245,6 +248,7 @@ class GameRule{
       (rowInd!=null || colInd!=null) 
         ? (ruleKind==RuleKind.ROW ? rowInd! : colInd!)
         : (ruleKind==RuleKind.ROW ? RANDOM_GENERATOR.nextInt(gridDims.item2) : RANDOM_GENERATOR.nextInt(gridDims.item1)),
+      oriIndex,
     );
   }
 
@@ -254,6 +258,7 @@ class GameRule{
       effector,
       effect,
       ruleKindIndex,
+      ruleKindOriIndex,
     );
   }
 }

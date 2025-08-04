@@ -57,9 +57,11 @@ class GameState {
 
       rules[rule1Ind].ruleKindIndex = rule2.ruleKindIndex;
       rules[rule1Ind].kind = rule2.kind;
+      rules[rule1Ind].ruleKindOriIndex = rule2.ruleKindOriIndex;
 
       rules[rule2Ind].ruleKindIndex = rule1.ruleKindIndex;
       rules[rule2Ind].kind = rule1.kind;
+      rules[rule2Ind].ruleKindOriIndex = rule1.ruleKindOriIndex;
     }
     grid = getBlankBoard();
     currentLevelGrid = getBlankBoard();
@@ -82,12 +84,12 @@ class GameState {
 
   List<GameRule> getRandomRules(){
     List<GameRule> newRules = [];
-    for (int colInd = 0; colInd < gridDims.item1; colInd++){
-      newRules.add(GameRule.random(gridDims, RuleKind.COLUMN, null, colInd));
+    for (int colInd = 0; colInd < gridDims.item1*2; colInd++){
+      newRules.add(GameRule.random(gridDims, RuleKind.COLUMN, null, (colInd/2).floor(), colInd%2));
     }
 
-    for (int rowInd = 0; rowInd < gridDims.item2; rowInd++){
-      newRules.add(GameRule.random(gridDims, RuleKind.ROW, rowInd, null));
+    for (int rowInd = 0; rowInd < gridDims.item2*2; rowInd++){
+      newRules.add(GameRule.random(gridDims, RuleKind.ROW, (rowInd/2).floor(), null, rowInd%2));
     }
 
     return newRules;
