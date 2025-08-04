@@ -3,9 +3,9 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "a7c059def39e4d5f24699bf94db8c56b",
-"index.html": "bf93cb31fd94dfc4d8beaa790cfac60d",
-"/": "bf93cb31fd94dfc4d8beaa790cfac60d",
+const RESOURCES = {"flutter_bootstrap.js": "6d39256d1101cb5615e98c9231baa78a",
+"index.html": "4292aeac5850efbc262419cabb6909e8",
+"/": "4292aeac5850efbc262419cabb6909e8",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "33b7d9392238c04c131b6ce224e13711",
 "assets/packages/flutter_soloud/web/init_module.dart.js": "ea0b343660fd4dace81cfdc2910d14e6",
 "assets/packages/flutter_soloud/web/libflutter_soloud_plugin.wasm": "da6883b906173dea99c0e7618535abe4",
@@ -42,7 +42,7 @@ const RESOURCES = {"flutter_bootstrap.js": "a7c059def39e4d5f24699bf94db8c56b",
 "canvaskit/skwasm.js.symbols": "e72c79950c8a8483d826a7f0560573a1",
 "canvaskit/skwasm.wasm": "39dd80367a4e71582d234948adc521c0",
 "version.json": "1b8c61a107cadbadf719696fbf51857c",
-"main.dart.js": "40501c294ab6190d5d9693957acd2e46",
+"main.dart.js": "dbd721d8837e7af165a2234afbd5bfe9",
 "flutter.js": "83d881c1dbb6d6bcd6b42e274605b69c"};
 // The application shell files that are downloaded before a service worker can
 // start.

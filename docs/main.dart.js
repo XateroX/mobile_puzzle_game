@@ -22579,7 +22579,7 @@ $S:2}
 A.adU.prototype={
 $1(a){var s=A.dC().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"canvaskit/":s)+a},
+return(s==null?"https://www.gstatic.com/flutter-canvaskit/39d6d6e699e51b2874210e14cddf1a22fb9524b2/":s)+a},
 $S:165}
 A.RI.prototype={
 ea(a,b){var s,r=this.a
