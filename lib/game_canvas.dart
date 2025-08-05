@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/data/game_rule.dart';
 import 'package:mobile_puzzle_game/data/game_state.dart';
 import 'package:mobile_puzzle_game/data/grid_item.dart';
+import 'package:tuple/tuple.dart';
 
 class GameCanvas extends CustomPainter {
   GameState gameState;
@@ -13,6 +14,8 @@ class GameCanvas extends CustomPainter {
   Offset? lastPositionOfPointer;
   bool gamePaused;
   bool canSave;
+  bool showingNextMove;
+  Tuple2<int,int>? nextMoveOrigin;
   
   GameCanvas({
     required this.gameState,
@@ -23,7 +26,16 @@ class GameCanvas extends CustomPainter {
     required this.lastPositionOfPointer,
     required this.gamePaused,
     required this.canSave,
+    required this.showingNextMove,
+    required this.nextMoveOrigin,
   });
+
+  List<List<GridItem>> _getGridToDraw(){
+    if (showingNextMove && nextMoveOrigin!=null){
+      return gameState.nextGridForPosition(nextMoveOrigin!.item1, nextMoveOrigin!.item2).item1;
+    }
+    return gameState.grid;
+  }
 
   void _drawGameGrid(
     Canvas canvas, 
@@ -38,8 +50,8 @@ class GameCanvas extends CustomPainter {
     double squareWidth = (canvasActualSize.width / gameState.gridDims.item2) - padding;
     double squareHeight = (canvasActualSize.height / gameState.gridDims.item1) - padding;
 
-    for (int i = 0; i < gameState.grid.length; i++) {
-      for (int j = 0; j < gameState.grid[i].length; j++) {
+    for (int i = 0; i < _getGridToDraw().length; i++) {
+      for (int j = 0; j < _getGridToDraw()[i].length; j++) {
         double xOffset = canvasActualTopLeft.dx + (squareWidth + padding) * i;
         double yOffset = canvasActualTopLeft.dy + (squareHeight + padding) * j;
         
@@ -80,7 +92,7 @@ class GameCanvas extends CustomPainter {
     Offset overallTranslation,
     {bool solution=false,}
   ){
-    List<List<GridItem>> gridToPullFrom = solution ? gameState.solutionGrid : gameState.grid;
+    List<List<GridItem>> gridToPullFrom = solution ? gameState.solutionGrid : _getGridToDraw();
 
     double scale = solution ? 0.25 : 0.8;
     double scaledSquareWidth = squareWidth * scale;
@@ -213,6 +225,21 @@ class GameCanvas extends CustomPainter {
       );
     }
 
+    if (nextMoveOrigin!=null){
+      canvas.drawRect(
+        Rect.fromLTWH(
+          0, 
+          (size.height - maxHeight)/2, 
+          size.width, 
+          maxHeight
+        ), 
+        Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = maxHeight/100
+        ..color = Color.fromARGB(255, 234, 0, 255)
+      );
+    }
+
     _drawGameOverallUI(canvas, Offset(0, (size.height - maxHeight)/2), Size(size.width, maxHeight));
 
     _drawGameGrid(
@@ -231,11 +258,51 @@ class GameCanvas extends CustomPainter {
       overallTranslation,
     );
 
+    _drawShowingNextMoveRulesList(
+      canvas, 
+      size,
+      Offset(0, (size.height - maxHeight)/2),
+      Size(size.width, maxHeight),
+      overallTranslation,
+    );
+
     canvas.translate(-(size.width-size.width*scale)/2, -(size.height-size.height*scale)/2);
 
     canvas.restore();
     // _drawAllRectHitboxes(canvas);
     // _drawPointer(canvas);
+  }
+
+  void _drawShowingNextMoveRulesList(
+    Canvas canvas, 
+    Size size,
+    Offset canvasActualTopLeft,
+    Size canvasActualSize,
+    Offset overallTranslation,
+  ){
+    if (showingNextMove && nextMoveOrigin!=null) {
+      List<int> ruleInts = gameState.nextGridForPosition(nextMoveOrigin!.item1, nextMoveOrigin!.item2).item2;
+      final textPainter = TextPainter(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          text: ruleInts.join(" -> "),
+          style: TextStyle(
+            color: Colors.black, 
+            fontSize: 20,
+            fontWeight: FontWeight.bold
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas, 
+        Offset(
+          canvasActualTopLeft.dx + size.width/2 - textPainter.width/2, 
+          canvasActualTopLeft.dy + size.height/2 - textPainter.height/2,
+        )
+      );
+    }
   }
 
   void _drawGameRules(

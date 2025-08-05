@@ -149,7 +149,14 @@ class GameState {
     }
   }
 
-  void tickGame(){
+  Tuple2<List<List<GridItem>>,List<int>> nextGridForPosition(
+    int x, 
+    int y,
+  ){
+    return _applyAllRulesForSquare(x, y, grid);
+  }
+
+  List<List<GridItem>> tickGame({List<List<GridItem>>? proxyGrid}){
     print("TICK");
     List<List<GridItem>> nextOverallgameGrid = getBlankBoard();
 
@@ -166,7 +173,7 @@ class GameState {
         if (item.kind!=GridItemKind.BLANK){
           int x = grid.indexOf(itemCol);
           int y = itemCol.indexOf(item);
-          List<List<GridItem>> newGrid = _applyAllRulesForSquare(x,y, grid);
+          List<List<GridItem>> newGrid = _applyAllRulesForSquare(x,y, grid).item1;
           gridNextList[gridDims.item1*x+y] = newGrid;
         }
       }
@@ -196,15 +203,20 @@ class GameState {
         }
       }
     }
-    print("");
+    if (proxyGrid!=null){
+      proxyGrid = nextOverallgameGrid;
+      return proxyGrid;
+    }
     grid = nextOverallgameGrid;
+    return grid;
   }
 
-  List<List<GridItem>> _applyAllRulesForSquare(
+  Tuple2<List<List<GridItem>>,List<int>> _applyAllRulesForSquare(
     int x, 
     int y,
     List<List<GridItem>> gridToApplyTo,
   ){
+    List<int> ruleInts = [];
     List<List<GridItem>> newGrid = getBlankBoard();
     // for (var itemCol in gridToApplyTo) {
     //   newGrid.add([]);
@@ -227,12 +239,12 @@ class GameState {
       ){
         if (rule.effector==gridToApplyTo[x][y].kind){
           newGrid = _applyGameRule(rule, newGrid);
-          print("");
+          ruleInts.add(rules.indexOf(rule));
         }
       }
     }
 
-    return newGrid;
+    return Tuple2(newGrid,ruleInts);
   }
 
   List<List<GridItem>> _applyGameRule(

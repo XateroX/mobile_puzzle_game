@@ -82,6 +82,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   bool _shouldIncrement = false;
   bool _shouldDecrement = false;
 
+  Tuple2<int,int>? nextMoveOrigin;
+
   bool gamePaused = true;
 
   int tickRate = 1;
@@ -225,6 +227,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           pressedRuleOrigin = details.localPosition;
                         }
                         print("Long: $pressingRule");
+                        int? pressingSquare = hitTestBar(details.localPosition);
+                        if (pressingSquare!=null){
+                          int colInd = (selectedSquare! % gameState.gridDims.item1);
+                          int rowInd = (selectedSquare! ~/ gameState.gridDims.item1);
+                          nextMoveOrigin = Tuple2(rowInd, colInd);
+                        }
                       }
                     },
                     onLongPressMoveUpdate: (details) {
@@ -251,6 +259,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       }
                       pressedRule = null;
                       pressedRulePosition = null;
+                      nextMoveOrigin = null;
                     },
                     onHorizontalDragUpdate: (DragUpdateDetails details){
                       if (details.delta.dx>0 && (details.delta.dx).abs()>(details.delta.dy).abs()){
@@ -311,6 +320,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         lastPositionOfPointer: lastPositionOfPointer,
                         gamePaused: gamePaused,
                         canSave: _canSave,
+                        showingNextMove: nextMoveOrigin!=null,
+                        nextMoveOrigin: nextMoveOrigin,
                       ),
                     ),
                   ),
