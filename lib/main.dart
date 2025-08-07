@@ -24,7 +24,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final audioController = AudioController();
-  // await audioController.initialize();
+  await audioController.initialize();
   // audioController.startMusic();
 
   SoundState soundState = SoundState(audioController:audioController);
