@@ -153,7 +153,14 @@ class GameState {
     int x, 
     int y,
   ){
-    return _applyAllRulesForSquare(x, y, grid);
+    Tuple2<List<List<GridItem>>,List<int>> nextGrid = _applyAllRulesForSquare(x, y, grid);
+    for (int x = 0; x < gridDims.item1; x++){
+      for (int y = 0; y < gridDims.item2; y++){
+        nextGrid.item1[x][y].size = 1;
+        nextGrid.item1[x][y].indexOffset = Tuple2(0,0);
+      }
+    }
+    return nextGrid;
   }
 
   List<List<GridItem>> tickGame({List<List<GridItem>>? proxyGrid}){
@@ -205,6 +212,12 @@ class GameState {
     }
     if (proxyGrid!=null){
       proxyGrid = nextOverallgameGrid;
+      for (int x = 0; x < gridDims.item1; x++){
+        for (int y = 0; y < gridDims.item2; y++){
+          proxyGrid[x][y].size = 1;
+          proxyGrid[x][y].indexOffset = Tuple2(0,0);
+        }
+      }
       return proxyGrid;
     }
     grid = nextOverallgameGrid;
@@ -304,6 +317,17 @@ class GameState {
               (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
             ] = gridToApplyTo[i][index].copy();
 
+            gridNext
+            [
+              (i+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
+            ].indexOffset = Tuple2(
+              -vector.item1.toDouble(),
+              -vector.item2.toDouble(),
+            );
+
             gridNext[i][index] = GridItem.blank();
           }
         }
@@ -318,6 +342,17 @@ class GameState {
             [
               (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
             ] = gridToApplyTo[index][i].copy();
+
+            gridNext
+            [
+              (index+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
+            ].indexOffset = Tuple2(
+              -vector.item1.toDouble(),
+              -vector.item2.toDouble(),
+            );
 
             gridNext[index][i] = GridItem.blank();
           }
@@ -356,6 +391,25 @@ class GameState {
             [
               (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
             ] = gridToApplyTo[i][index].copy();
+
+            gridNext
+            [
+              (i+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
+            ].size = 0;
+
+            gridNext
+            [
+              (i+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (index+vector.item2)%gridToApplyTo[(i+vector.item1)%gridToApplyTo.length].length
+            ].indexOffset = Tuple2(
+              -vector.item1.toDouble(),
+              -vector.item2.toDouble(),
+            );
           }
         }
         break;
@@ -369,6 +423,25 @@ class GameState {
             [
               (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
             ] = gridToApplyTo[index][i].copy();
+
+            gridNext
+            [
+              (index+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
+            ].size = 0;
+
+            gridNext
+            [
+              (index+vector.item1)%gridToApplyTo.length
+            ]
+            [
+              (i+vector.item2)%gridToApplyTo[(index+vector.item1)%gridToApplyTo.length].length
+            ].indexOffset = Tuple2(
+              -vector.item1.toDouble(),
+              -vector.item2.toDouble(),
+            );
           }
         }
         break;
@@ -400,6 +473,7 @@ class GameState {
           if (gridToApplyTo[i][index].kind == itemKind){
             gridNext[i][index] = gridToApplyTo[i][index].copy();
             gridNext[i][index].cycleKind(cycleUp:cycleUp);
+            gridNext[i][index].size = 1.5;
           }
         }
         break;
@@ -409,6 +483,7 @@ class GameState {
             if (gridToApplyTo[index][i].kind == itemKind){
               gridNext[index][i] = gridToApplyTo[index][i].copy();
               gridNext[index][i].cycleKind(cycleUp:cycleUp);
+              gridNext[i][index].size = 1.5;
             }
           }
         }

@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:mobile_puzzle_game/main.dart';
+import 'package:tuple/tuple.dart';
 
 enum GridItemKind {
   BLANK,
@@ -56,11 +57,20 @@ extension GridItemKindExtensions on GridItemKind {
 class GridItem{
   GridItemKind kind;
 
-  GridItem(this.kind);
+  double size;
+  Tuple2<double,double> indexOffset;
+
+  GridItem(
+    this.kind,
+    {
+      this.size = 1,
+      this.indexOffset = const Tuple2(0,0),
+    }
+  );
 
   static blank(){
     return GridItem(
-      GridItemKind.BLANK
+      GridItemKind.BLANK,
     );
   }
 
@@ -95,7 +105,9 @@ class GridItem{
 
   GridItem copy(){
     return GridItem(
-      kind
+      kind,
+      size: size,
+      indexOffset: indexOffset,
     );
   }
 }

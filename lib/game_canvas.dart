@@ -97,12 +97,12 @@ class GameCanvas extends CustomPainter {
     double scale = solution ? 0.25 : 0.8;
     double scaledSquareWidth = squareWidth * scale;
     double scaledSquareHeight = squareHeight * scale;
-    double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex + squareWidth/10;
-    double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex + squareHeight/10;
+    double scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * (xIndex+gridToPullFrom[xIndex][yIndex].indexOffset.item1) + squareWidth/10;
+    double scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * (yIndex+gridToPullFrom[xIndex][yIndex].indexOffset.item2) + squareHeight/10;
 
     Paint p = Paint()
       ..style = PaintingStyle.fill;
-    Path scaledPath = gridToPullFrom[xIndex][yIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth, scaledSquareHeight, 1.0).storage);
+    Path scaledPath = gridToPullFrom[xIndex][yIndex].kind.shape.transform(Matrix4.diagonal3Values(scaledSquareWidth*gridToPullFrom[xIndex][yIndex].size, scaledSquareHeight*gridToPullFrom[xIndex][yIndex].size, 1.0).storage);
     canvas.save();
     canvas.translate(scaledXOffset + (squareWidth-scaledSquareWidth)/2, scaledYOffset + (squareHeight-scaledSquareHeight)/2);
     canvas.drawPath(
@@ -110,6 +110,10 @@ class GameCanvas extends CustomPainter {
       p
         ..color = gridToPullFrom[xIndex][yIndex].kind.color.withAlpha(solution ? 175 : 255)
     );
+
+    scaledXOffset = canvasActualTopLeft.dx + (squareWidth + padding) * xIndex + squareWidth/10;
+    scaledYOffset = canvasActualTopLeft.dy + (squareHeight + padding) * yIndex + squareHeight/10;
+
     if (solution){
       canvas.drawPath(
         scaledPath,
@@ -155,6 +159,13 @@ class GameCanvas extends CustomPainter {
         )
       );
     }
+
+    gridToPullFrom[xIndex][yIndex].indexOffset = Tuple2(
+      gridToPullFrom[xIndex][yIndex].indexOffset.item1*0.75,
+      gridToPullFrom[xIndex][yIndex].indexOffset.item2*0.75,
+    );
+
+    gridToPullFrom[xIndex][yIndex].size = 1 - (1-gridToPullFrom[xIndex][yIndex].size)/2;
   }
 
   void _drawGameSquareWithExactPos(
